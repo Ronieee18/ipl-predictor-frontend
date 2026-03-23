@@ -1,4 +1,7 @@
-const BASE = '/api';
+// Check for Vite or Create React App environment variables, fallback to '/api' for local dev proxy
+const BASE = (import.meta.env && import.meta.env.VITE_API_URL) || 
+             (typeof process !== 'undefined' && process.env.REACT_APP_API_URL) || 
+             '/api';
 
 async function req(path, options = {}) {
   const { headers: customHeaders, ...restOptions } = options;
