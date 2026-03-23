@@ -1,16 +1,27 @@
-import React, { useEffect } from "react";
+import React, { useEffect,useState } from "react";
 import { Outlet, NavLink, useNavigate, Navigate } from "react-router-dom";
 import { useUser } from "../../context/UserContext.jsx";
+import { getLeaderboardSettings } from "../../api.js";
 import styles from "./UserLayout.module.css";
 
 export default function UserLayout() {
   const { user, logout, refreshUser } = useUser();
   const navigate = useNavigate();
+  const [leaderboardVisible, setLeaderboardVisible] = useState(true);
 
   useEffect(() => {
     if (user?.username) {
       refreshUser();
-      const interval = setInterval(refreshUser, 15000); // 15s polling
+      
+      const fetchSettings = () => {
+        getLeaderboardSettings().then(res => setLeaderboardVisible(res.visible)).catch(() => {});
+      };
+      fetchSettings();
+
+      const interval = setInterval(() => {
+        refreshUser();
+        fetchSettings();
+      }, 15000); // 15s polling
       return () => clearInterval(interval);
     }
   }, [user?.username, refreshUser]);
@@ -51,14 +62,16 @@ export default function UserLayout() {
             >
               <span>📜</span> Records
             </NavLink>
-            <NavLink
-              to="/app/leaderboard"
-              className={({ isActive }) =>
-                `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
-              }
-            >
-              <span>🏆</span> Leaderboard
-            </NavLink>
+            {leaderboardVisible && (
+              <NavLink
+                to="/app/leaderboard"
+                className={({ isActive }) =>
+                  `${styles.navLink} ${isActive ? styles.navLinkActive : ""}`
+                }
+              >
+                <span>🏆</span> Leaderboard
+              </NavLink>
+            )}
           </nav>
 
           <div className={styles.userArea}>
@@ -98,15 +111,17 @@ export default function UserLayout() {
           <span className={styles.mobileNavIcon}>📜</span>
           <span>Records</span>
         </NavLink>
-        <NavLink
-          to="/app/leaderboard"
-          className={({ isActive }) =>
-            `${styles.mobileNavLink} ${isActive ? styles.mobileNavLinkActive : ""}`
-          }
-        >
-          <span className={styles.mobileNavIcon}>🏆</span>
-          <span>Board</span>
-        </NavLink>
+        {leaderboardVisible && (
+          <NavLink
+            to="/app/leaderboard"
+            className={({ isActive }) =>
+              `${styles.mobileNavLink} ${isActive ? styles.mobileNavLinkActive : ""}`
+            }
+          >
+            <span className={styles.mobileNavIcon}>🏆</span>
+            <span>Board</span>
+          </NavLink>
+        )}
         {/* <button
           className={styles.mobileNavLink}
           onClick={handleLogout}

@@ -55,6 +55,15 @@ export default function Leaderboard() {
   }
 
   if (error) {
+    if (error.includes('hidden')) {
+      return (
+        <div className="error-box" style={{ margin: "40px auto", maxWidth: 500, padding: 30, textAlign: 'center', background: 'var(--bg-mid)', border: '1px solid var(--border)', fontSize: '1.1rem' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🙈</div>
+          <div>{error}</div>
+          <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Check back later!</div>
+        </div>
+      );
+    }
     return (
       <div className="error-box" style={{ margin: "40px auto", maxWidth: 500 }}>
         <span>⚠</span> {error}

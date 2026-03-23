@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { to: '/admin/panel/add-question', icon: '➕', label: 'Add Question' },
   { to: '/admin/panel/questions', icon: '❓', label: 'All Questions' },
   { to: '/admin/panel/leaderboard', icon: '🏆', label: 'Leaderboard' },
+  { to: '/admin/panel/users', icon: '👥', label: 'Users' },
 ];
 
 export default function AdminLayout() {

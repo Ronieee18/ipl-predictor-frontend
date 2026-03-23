@@ -80,26 +80,26 @@ export default function JoinPage() {
         {/* Join form */}
         <div className={styles.formCard}>
           <h2 className={styles.formTitle}>Enter the Arena</h2>
-          <p className={styles.formSub}>Choose your name to start predicting</p>
+          <p className={styles.formSub}>Log in with your company email</p>
 
           <form onSubmit={handleJoin} className={styles.form}>
             <div>
               <label className="input-label" htmlFor="username">
-                Your Name
+                Company Email
               </label>
               <input
                 id="username"
                 className="input"
-                type="text"
-                placeholder="e.g. Rohit_Fan99"
+                type="email"
+                placeholder="name@company.com"
                 value={username}
                 onChange={(e) => {
                   setUsername(e.target.value);
                   setError("");
                 }}
-                maxLength={30}
+                maxLength={60}
                 autoFocus
-                autoComplete="off"
+                autoComplete="email"
               />
             </div>
 

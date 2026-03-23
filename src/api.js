@@ -1,4 +1,5 @@
 const BASE = 'https://ipl-predictor-backend.vercel.app/api';
+// const BASE = 'http://localhost:5000/api';
 
 async function req(path, options = {}) {
   const { headers: customHeaders, ...restOptions } = options;
@@ -19,6 +20,8 @@ export const joinUser = (username) =>
 export const getLeaderboard = (filter = 'overall') => req(`/users/leaderboard?filter=${filter}`);
 
 export const getUserHistory = (userId) => req(`/users/${userId}/history`);
+
+export const getLeaderboardSettings = () => req('/users/settings/leaderboard');
 
 // ── Questions ─────────────────────────────────────────────────────
 export const getActiveQuestions = () => req('/questions/active');
@@ -61,3 +64,18 @@ export const adminGetAnalytics = (secret) =>
 
 export const adminGetLeaderboard = (secret, filter = 'overall') =>
   req(`/admin/leaderboard?filter=${filter}`, { headers: adminHeaders(secret) });
+
+export const adminGetSettings = (secret) =>
+  req('/admin/settings', { headers: adminHeaders(secret) });
+
+export const adminUpdateSetting = (secret, key, value) =>
+  req('/admin/settings', { method: 'PUT', headers: adminHeaders(secret), body: { key, value } });
+
+export const adminGetUsers = (secret) =>
+  req('/admin/users', { headers: adminHeaders(secret) });
+
+export const adminCreateUser = (secret, body) =>
+  req('/admin/users', { method: 'POST', headers: adminHeaders(secret), body });
+
+export const adminDeleteUser = (secret, id) =>
+  req(`/admin/users/${id}`, { method: 'DELETE', headers: adminHeaders(secret) });

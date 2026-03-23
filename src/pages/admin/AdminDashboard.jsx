@@ -12,7 +12,7 @@ import {
   Legend,
 } from "recharts";
 import { useAdmin } from "../../context/AdminContext.jsx";
-import { adminGetAnalytics } from "../../api.js";
+import { adminGetAnalytics, adminGetSettings, adminUpdateSetting } from "../../api.js";
 import styles from "./AdminDashboard.module.css";
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -51,6 +51,7 @@ function StatCard({ icon, label, value, sub, accent }) {
 export default function AdminDashboard() {
   const { adminSecret, adminLogout } = useAdmin();
   const [data, setData] = useState(null);
+  const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -62,8 +63,15 @@ export default function AdminDashboard() {
     setLoading(true);
     setError("");
     try {
-      const res = await adminGetAnalytics(adminSecret);
-      setData(res);
+      const [analyticsRes, settingsRes] = await Promise.all([
+        adminGetAnalytics(adminSecret),
+        adminGetSettings(adminSecret)
+      ]);
+      setData(analyticsRes);
+      
+      const settingsMap = {};
+      settingsRes.forEach(s => { settingsMap[s.key] = s.value; });
+      setSettings(settingsMap);
     } catch (err) {
       if (err.message.includes('Unauthorized')) {
         adminLogout();
@@ -98,6 +106,17 @@ export default function AdminDashboard() {
     );
   if (!data) return null;
 
+  const toggleLeaderboard = async () => {
+    const currentVal = settings.leaderboardVisible ?? true;
+    const newVal = !currentVal;
+    try {
+      await adminUpdateSetting(adminSecret, 'leaderboardVisible', newVal);
+      setSettings(prev => ({ ...prev, leaderboardVisible: newVal }));
+    } catch (err) {
+      alert("Failed to update setting: " + err.message);
+    }
+  };
+
   const {
     summary,
     perQuestion = [],
@@ -125,6 +144,32 @@ export default function AdminDashboard() {
         <button className="btn btn-ghost btn-sm" onClick={load}>
           ↻ Refresh
         </button>
+      </div>
+
+      <div className="card" style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2 style={{ fontSize: '1.2rem', margin: 0, fontWeight: 700 }}>Global Settings</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: '4px 0 0' }}>Manage application-wide configurations</p>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontWeight: 500 }}>Leaderboard Visibility:</span>
+          <label className={styles.toggleSwitch}>
+            <input 
+              type="checkbox" 
+              checked={settings.leaderboardVisible !== false} 
+              onChange={toggleLeaderboard} 
+            />
+            <span className={styles.toggleSlider}></span>
+          </label>
+          <span style={{ 
+            fontSize: '0.9rem', 
+            fontWeight: 600,
+            minWidth: '70px', 
+            color: settings.leaderboardVisible !== false ? 'var(--accent-green)' : 'var(--text-muted)'
+          }}>
+            {settings.leaderboardVisible !== false ? '👁 Visible' : '🙈 Hidden'}
+          </span>
+        </div>
       </div>
 
       <div className={styles.statsGrid}>

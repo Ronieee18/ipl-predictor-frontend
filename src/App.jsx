@@ -14,6 +14,7 @@ import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import AdminQuestions from './pages/admin/AdminQuestions.jsx';
 import AdminAddQuestion from './pages/admin/AdminAddQuestion.jsx';
 import AdminLeaderboard from './pages/admin/AdminLeaderboard.jsx';
+import AdminUsers from './pages/admin/AdminUsers.jsx';
 
 export default function App() {
   return (
@@ -39,6 +40,7 @@ export default function App() {
               <Route path="add-question" element={<AdminAddQuestion />} />
               <Route path="questions" element={<AdminQuestions />} />
               <Route path="leaderboard" element={<AdminLeaderboard />} />
+              <Route path="users" element={<AdminUsers />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />
