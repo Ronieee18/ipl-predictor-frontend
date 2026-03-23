@@ -1,0 +1,74 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 900px;
+}
+
+.pageHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pageTitle {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 800;
+  flex: 1;
+}
+
+.sectionTitle {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.formRow {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.optionsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.optionInput {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.optionRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+@media (max-width: 600px) {
+  .optionsGrid {
+    grid-template-columns: 1fr;
+  }
+  .optionRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

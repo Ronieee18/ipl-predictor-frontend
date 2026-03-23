@@ -1,0 +1,300 @@
+.page {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Header ───────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.myRankCard {
+  background: var(--accent-gold-dim);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-lg);
+  padding: 14px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  animation: glowPulse 3s ease infinite;
+}
+
+.myRankLabel {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-gold);
+}
+
+.myRankValue {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--accent-gold);
+  line-height: 1;
+}
+
+.myRankScore {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* ── Podium ───────────────────────────────────────── */
+.podium {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px 16px 0;
+}
+
+.podiumItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  max-width: 160px;
+}
+
+.podiumAvatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: white;
+}
+
+.podiumFirst .podiumAvatar {
+  width: 58px;
+  height: 58px;
+  font-size: 1.4rem;
+  background: linear-gradient(135deg, var(--accent-gold), #ff8c00);
+  box-shadow: 0 0 20px rgba(244, 185, 66, 0.4);
+}
+
+.podiumName {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-align: center;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.podiumScore {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.podiumFirst .podiumScore {
+  color: var(--accent-gold);
+  font-weight: 700;
+}
+
+.podiumBar {
+  width: 100%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12px;
+}
+
+.podiumFirst .podiumBar {
+  background: var(--accent-gold-dim);
+  border-color: var(--border-accent);
+}
+
+.podiumMedal {
+  font-size: 1.4rem;
+}
+
+/* ── Table ────────────────────────────────────────── */
+.myRow td {
+  background: var(--accent-gold-dim) !important;
+}
+.myRow:hover td {
+  background: rgba(244, 185, 66, 0.12) !important;
+}
+
+.rankNum {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.playerCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.playerAvatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.playerName {
+  font-family: var(--font-display);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.playerUsername {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.scoreValue {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+}
+
+.accuracyBar {
+  position: relative;
+  width: 80px;
+  height: 20px;
+  background: var(--bg-elevated);
+  border-radius: 100px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.accuracyFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 100px;
+  transition: width 0.6s ease;
+  opacity: 0.7;
+}
+
+.accuracyText {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  width: 100%;
+  text-align: center;
+  z-index: 1;
+  color: var(--text-primary);
+}
+
+.speedValue {
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+}
+
+/* ── Empty ────────────────────────────────────────── */
+.empty {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--text-secondary);
+}
+
+.emptyIcon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+
+/* ── Refresh note ─────────────────────────────────── */
+.refreshNote {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+@media (max-width: 600px) {
+  .podium {
+    gap: 8px;
+  }
+  .podiumName {
+    font-size: 0.75rem;
+  }
+}
+
+/* ── Filters ──────────────────────────────────────── */
+.filterGroup {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  background: var(--bg-elevated);
+  padding: 6px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  width: fit-content;
+}
+
+.filterBtn {
+  background: transparent;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 100px;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.filterBtn:hover {
+  color: var(--text-primary);
+}
+
+.filterBtnActive {
+  background: var(--accent-blue);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
