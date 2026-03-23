@@ -24,7 +24,15 @@ export default function AdminAddQuestion() {
     
     setSubmitting(true);
     try {
-      await adminCreateQuestion(adminSecret, { ...form, options: cleanOptions, maxPoints: Number(form.maxPoints) });
+      const payload = {
+        ...form,
+        matchDate: form.startTime.split('T')[0],
+        startTime: new Date(form.startTime).toISOString(),
+        endTime: new Date(form.endTime).toISOString(),
+        options: cleanOptions,
+        maxPoints: Number(form.maxPoints)
+      };
+      await adminCreateQuestion(adminSecret, payload);
       setSuccess('✅ Question created successfully!');
       setForm(EMPTY_FORM);
     } catch (err) { setError(err.message); }

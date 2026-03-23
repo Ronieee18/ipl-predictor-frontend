@@ -100,7 +100,8 @@ export default function AdminQuestions() {
 
     // 2. Date Filter
     if (filterDate) {
-      const qDate = new Date(q.startTime).toISOString().slice(0, 10);
+      const d = new Date(q.startTime);
+      const qDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
       if (qDate !== filterDate) return false;
     }
 
