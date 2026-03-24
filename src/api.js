@@ -1,5 +1,5 @@
-// const BASE = 'https://ipl-predictor-backend.vercel.app/api';
-const BASE = 'http://localhost:5000/api';
+const BASE = 'https://ipl-predictor-backend.vercel.app/api';
+// const BASE = 'http://localhost:5000/api';
 
 async function req(path, options = {}) {
   const { headers: customHeaders, ...restOptions } = options;
