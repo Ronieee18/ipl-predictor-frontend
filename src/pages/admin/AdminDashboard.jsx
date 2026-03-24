@@ -412,7 +412,7 @@ export default function AdminDashboard() {
                   />
                   <div className={styles.activityBody}>
                     <div className={styles.activityUser}>
-                      {a.userId?.displayName ?? "Unknown"}
+                      {a.userId?.displayName ?? "Deleted User"}
                     </div>
                     <div className={styles.activityMatch}>
                       {a.questionId?.matchTitle ?? "—"}

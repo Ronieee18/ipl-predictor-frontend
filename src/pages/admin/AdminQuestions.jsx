@@ -249,8 +249,8 @@ export default function AdminQuestions() {
                         {answersData[q._id]?.map(ans => (
                           <div key={ans._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'var(--bg-elevated)', borderRadius: '6px', border: '1px solid var(--border-accent)' }}>
                             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                              <span style={{ fontWeight: 500 }}>{ans.userId?.displayName || 'Unknown User'}</span>
-                              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>@{ans.userId?.username || 'unknown'}</span>
+                              <span style={{ fontWeight: 500 }}>{ans.userId?.displayName || 'Deleted User'}</span>
+                              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>@{ans.userId?.username || 'deleted'}</span>
                             </div>
                             <div style={{ textAlign: 'right' }}>
                               <div style={{ fontWeight: 600, color: 'var(--accent-blue)' }}>Option {String.fromCharCode(65 + ans.selectedOption)}</div>
