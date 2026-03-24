@@ -149,7 +149,7 @@ export default function TodayQuiz() {
                 <span className="badge badge-gold">
                   +{question.maxPoints} pts base
                 </span>
-                <span className="badge badge-blue">Speed bonus up to +5</span>
+                {/* <span className="badge badge-blue">Speed bonus up to +5</span> */}
               </div>
             </div>
 
