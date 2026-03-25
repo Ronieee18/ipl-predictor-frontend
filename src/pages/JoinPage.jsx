@@ -49,12 +49,12 @@ export default function JoinPage() {
         <div className={styles.hero}>
           <div className={styles.iplBadge}>
             <span className={styles.iplIcon}>🏏</span>
-            <span className={styles.iplLabel}>IPL 2025</span>
+            <span className={styles.iplLabel}>IPL 2026</span>
           </div>
           <h1 className={styles.title}>
-            Match
+            BSPL 
             <br />
-            <span className={styles.titleAccent}>Predictor</span>
+            <span className={styles.titleAccent}>CricKraze PrediXion</span>
           </h1>
           <p className={styles.subtitle}>
             Predict daily IPL match outcomes · Earn points · Climb the
@@ -66,13 +66,13 @@ export default function JoinPage() {
         <div className={styles.statsRow}>
           {[
             { icon: "⚡", label: "Daily Questions", value: "1" },
-            { icon: "🏆", label: "Points per Correct", value: "10+" },
-            { icon: "🎁", label: "Season Prizes", value: "3" },
+            { icon: "🏆", label: "Points per Correct answer", value: "10+" },
+            { icon: "🎁", label: "Exciting Prizes" },
           ].map((s) => (
             <div key={s.label} className={styles.statItem}>
               <span className={styles.statIcon}>{s.icon}</span>
-              <span className={styles.statValue}>{s.value}</span>
-              <span className={styles.statLabel}>{s.label}</span>
+              {/* <span className={styles.statValue}>{s.value}</span> */}
+              <span className={styles.subtitle}>{s.label}</span>
             </div>
           ))}
         </div>

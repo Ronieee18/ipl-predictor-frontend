@@ -23,14 +23,14 @@ export default function TodayQuiz() {
 
   function startPrediction(qId) {
     setStarted((prev) => ({ ...prev, [qId]: true }));
-    
-    // Play IPL sound
-    const audio = new Audio('/ipl.mp3');
-    audio.play().catch(e => console.log('Audio playback prevented:', e));
   }
 
   useEffect(() => {
     load();
+    
+    // Play IPL sound once on mount
+    const audio = new Audio('/ipl.mp3');
+    audio.play().catch(e => console.log('Audio playback prevented:', e));
   }, []);
 
   async function load() {

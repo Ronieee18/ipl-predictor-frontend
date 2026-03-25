@@ -20,18 +20,23 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("overall");
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    const ist = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+    return ist.toISOString().slice(0, 10);
+  });
 
   useEffect(() => {
     load();
     const interval = setInterval(load, 30000); // refresh every 30s
     return () => clearInterval(interval);
-  }, [filter]);
+  }, [filter, selectedDate]);
 
   async function load() {
     setData([]);
     setLoading(true);
     try {
-      const res = await getLeaderboard(filter);
+      const res = await getLeaderboard(filter, filter === 'daily' ? selectedDate : null);
       setData(res);
     } catch (err) {
       setError(err.message);
@@ -81,9 +86,27 @@ export default function Leaderboard() {
             Rankings updated in real-time · Tie-broken by average response delay
           </p>
           <div className={styles.filterGroup}>
-            <button className={`${styles.filterBtn} ${filter === 'daily' ? styles.filterBtnActive : ''}`} onClick={() => setFilter('daily')}>
-              1D Fastest
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button className={`${styles.filterBtn} ${filter === 'daily' ? styles.filterBtnActive : ''}`} onClick={() => setFilter('daily')}>
+                1D Fastest
+              </button>
+              {filter === 'daily' && (
+                <input 
+                  type="date" 
+                  value={selectedDate} 
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  style={{ 
+                    background: 'var(--bg-mid)', 
+                    color: 'var(--text-main)', 
+                    border: '1px solid var(--border)', 
+                    borderRadius: '8px', 
+                    padding: '4px 8px',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: '0.9rem'
+                  }}
+                />
+              )}
+            </div>
             <button className={`${styles.filterBtn} ${filter === 'weekly' ? styles.filterBtnActive : ''}`} onClick={() => setFilter('weekly')}>
               Weekly Fastest
             </button>

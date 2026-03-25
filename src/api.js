@@ -17,7 +17,11 @@ async function req(path, options = {}) {
 export const joinUser = (username) =>
   req('/users/join', { method: 'POST', body: { username } });
 
-export const getLeaderboard = (filter = 'overall') => req(`/users/leaderboard?filter=${filter}`);
+export const getLeaderboard = (filter = 'overall', date = null) => {
+  let url = `/users/leaderboard?filter=${filter}`;
+  if (date) url += `&date=${date}`;
+  return req(url);
+};
 
 export const getUserHistory = (userId) => req(`/users/${userId}/history`);
 
@@ -62,8 +66,11 @@ export const adminUpdateQuestion = (secret, id, body) =>
 export const adminGetAnalytics = (secret) =>
   req('/admin/analytics', { headers: adminHeaders(secret) });
 
-export const adminGetLeaderboard = (secret, filter = 'overall') =>
-  req(`/admin/leaderboard?filter=${filter}`, { headers: adminHeaders(secret) });
+export const adminGetLeaderboard = (secret, filter = 'overall', date = null) => {
+  let url = `/admin/leaderboard?filter=${filter}`;
+  if (date) url += `&date=${date}`;
+  return req(url, { headers: adminHeaders(secret) });
+};
 
 export const adminGetSettings = (secret) =>
   req('/admin/settings', { headers: adminHeaders(secret) });

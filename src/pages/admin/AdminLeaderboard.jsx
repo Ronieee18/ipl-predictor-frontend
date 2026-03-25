@@ -18,14 +18,19 @@ export default function AdminLeaderboard() {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState('rank');
   const [filter, setFilter] = useState('overall');
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const now = new Date();
+    const ist = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+    return ist.toISOString().slice(0, 10);
+  });
 
-  useEffect(() => { load(); }, [filter]);
+  useEffect(() => { load(); }, [filter, selectedDate]);
 
   async function load() {
     setData([]);
     setLoading(true);
     try {
-      const res = await adminGetLeaderboard(adminSecret, filter);
+      const res = await adminGetLeaderboard(adminSecret, filter, filter === 'daily' ? selectedDate : null);
       setData(res);
     } catch (err) { setError(err.message); }
     finally { setLoading(false); }
@@ -85,9 +90,27 @@ export default function AdminLeaderboard() {
 
       <div className={styles.controls}>
         <div className={styles.filterGroup}>
-          <button className={`${styles.filterBtn} ${filter === 'daily' ? styles.filterBtnActive : ''}`} onClick={() => setFilter('daily')}>
-            1D Fastest
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button className={`${styles.filterBtn} ${filter === 'daily' ? styles.filterBtnActive : ''}`} onClick={() => setFilter('daily')}>
+              1D Fastest
+            </button>
+            {filter === 'daily' && (
+              <input 
+                type="date" 
+                value={selectedDate} 
+                onChange={(e) => setSelectedDate(e.target.value)}
+                style={{ 
+                  background: 'var(--bg-mid)', 
+                  color: 'var(--text-main)', 
+                  border: '1px solid var(--border)', 
+                  borderRadius: '8px', 
+                  padding: '4px 8px',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '0.9rem'
+                }}
+              />
+            )}
+          </div>
           <button className={`${styles.filterBtn} ${filter === 'weekly' ? styles.filterBtnActive : ''}`} onClick={() => setFilter('weekly')}>
             Weekly Fastest
           </button>
