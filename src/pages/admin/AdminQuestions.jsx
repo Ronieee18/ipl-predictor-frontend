@@ -190,7 +190,7 @@ export default function AdminQuestions() {
                       {' - '}
                       {new Date(q.endTime).toLocaleString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                     </span>
-                    <span className="badge badge-blue">{q.maxPoints} pts base</span>
+                    <span className="badge badge-blue">{q.maxPoints} pts</span>
                     <span className={`badge ${q.isActive ? 'badge-green' : 'badge-red'}`}>{q.isActive ? 'Active' : 'Inactive'}</span>
                   </div>
                   {deleteId === q._id ? (

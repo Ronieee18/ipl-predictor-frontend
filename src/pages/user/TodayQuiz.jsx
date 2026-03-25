@@ -147,9 +147,8 @@ export default function TodayQuiz() {
               <h1 className={styles.matchTitle}>{question.matchTitle}</h1>
               <div className={styles.matchMeta}>
                 <span className="badge badge-gold">
-                  +{question.maxPoints} pts base
+                  +{question.maxPoints} pts
                 </span>
-                {/* <span className="badge badge-blue">Speed bonus up to +5</span> */}
               </div>
             </div>
 

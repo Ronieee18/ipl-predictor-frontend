@@ -84,5 +84,8 @@ export const adminGetUsers = (secret) =>
 export const adminCreateUser = (secret, body) =>
   req('/admin/users', { method: 'POST', headers: adminHeaders(secret), body });
 
+export const adminCreateUsersBulk = (secret, body) =>
+  req('/admin/users/bulk', { method: 'POST', headers: adminHeaders(secret), body });
+
 export const adminDeleteUser = (secret, id) =>
   req(`/admin/users/${id}`, { method: 'DELETE', headers: adminHeaders(secret) });

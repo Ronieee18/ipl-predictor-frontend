@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAdmin } from '../../context/AdminContext.jsx';
-import { adminGetUsers, adminCreateUser, adminDeleteUser } from '../../api.js';
+import { adminGetUsers, adminCreateUser, adminDeleteUser, adminCreateUsersBulk } from '../../api.js';
 import styles from './AdminQuestions.module.css';
 
 const EMPTY_FORM = { email: '', displayName: '' };
@@ -15,6 +15,60 @@ export default function AdminUsers() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
+  
+  const fileInputRef = React.useRef(null);
+  const [bulkUploading, setBulkUploading] = useState(false);
+
+  async function handleFileUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setBulkUploading(true);
+    setError('');
+    setSuccess('');
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      try {
+        const text = event.target.result;
+        const lines = text.split('\n').map(line => line.trim()).filter(line => line);
+        
+        // Skip header if it exists
+        let startIndex = 0;
+        if (lines.length > 0 && lines[0].toLowerCase().includes('email')) {
+          startIndex = 1;
+        }
+
+        const usersToAdd = [];
+        for (let i = startIndex; i < lines.length; i++) {
+          const parts = lines[i].split(',').map(p => p.trim());
+          if (parts.length >= 2) {
+            usersToAdd.push({ email: parts[0], displayName: parts[1] });
+          }
+        }
+
+        if (usersToAdd.length === 0) {
+          throw new Error('No valid users found in CSV. Ensure format is: Email, Display Name');
+        }
+
+        const res = await adminCreateUsersBulk(adminSecret, { users: usersToAdd });
+        setSuccess(`✅ Added ${res.added} users! ${res.errors.length > 0 ? `(${res.errors.length} failed, possibly duplicates)` : ''}`);
+        
+        load(); // Refresh table
+      } catch (err) {
+        setError('Bulk upload failed: ' + err.message);
+      } finally {
+        setBulkUploading(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      }
+    };
+    reader.onerror = () => {
+      setError('Failed to read file');
+      setBulkUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    reader.readAsText(file);
+  }
 
   useEffect(() => { load(); }, []);
 
@@ -83,6 +137,32 @@ export default function AdminUsers() {
           <button type="submit" className="btn btn-primary" disabled={submitting} style={{ marginTop: 24 }}>
             {submitting ? 'Adding...' : '+ Add User'}
           </button>
+          
+          <div style={{ flexBasis: '100%', height: 0 }}></div>
+          
+          <div style={{ marginTop: 16, borderTop: '1px dashed var(--border)', paddingTop: 16, width: '100%' }}>
+            <h3 style={{ fontSize: '1rem', marginBottom: 12 }}>Upload via CSV</h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 12 }}>
+              Format: <code>email, displayName</code> (First row acts as header if "email" is present)
+            </p>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+              <input
+                type="file"
+                accept=".csv"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+                id="csv-upload"
+              />
+              <label 
+                htmlFor="csv-upload" 
+                className="btn btn-ghost" 
+                style={{ cursor: 'pointer', opacity: bulkUploading ? 0.5 : 1, pointerEvents: bulkUploading ? 'none' : 'auto' }}
+              >
+                {bulkUploading ? 'Uploading...' : '📁 Select .csv File'}
+              </label>
+            </div>
+          </div>
         </form>
         {error && <div className="error-box" style={{ marginTop: 16 }}>{error}</div>}
         {success && <div className="success-box" style={{ marginTop: 16 }}>{success}</div>}
