@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useUser } from "../../context/UserContext.jsx";
 import { getActiveQuestions, getActiveStatus, submitAnswer } from "../../api.js";
 import styles from "./TodayQuiz.module.css";
@@ -17,168 +17,199 @@ export default function TodayQuiz() {
   
   // Independent state per question
   const [selectedOptions, setSelectedOptions] = useState({}); // { qId: optionIndex }
-  const [submitting, setSubmitting] = useState({}); // { qId: boolean }
   const [results, setResults] = useState({}); // { qId: resultObj }
-  const [started, setStarted] = useState({}); // { qId: boolean }
+  
+  // State per group
+  const [startedGroup, setStartedGroup] = useState({}); // { gId: boolean }
+  const [submittingGroup, setSubmittingGroup] = useState({}); // { gId: boolean }
 
-  function startPrediction(qId) {
-    setStarted((prev) => ({ ...prev, [qId]: true }));
+  function startGroupPrediction(gId) {
+    setStartedGroup((prev) => ({ ...prev, [gId]: true }));
   }
 
   useEffect(() => {
     load();
-    
-    // Play IPL sound once on mount
     const audio = new Audio('/ipl.mp3');
     audio.play().catch(e => console.log('Audio playback prevented:', e));
   }, []);
 
   async function load() {
-    setLoading(true);
-    setError("");
+    setLoading(true); setError("");
     try {
       const [qs, s] = await Promise.all([
         getActiveQuestions().catch(() => []),
         getActiveStatus(user._id).catch(() => ({ hasQuestions: false, statuses: {} })),
       ]);
-      
       setQuestions(qs || []);
       setStatuses(s.statuses || {});
-
-      if (qs && qs.length > 0) {
-        // No timer needed anymore.
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (err) { setError(err.message); }
+    finally { setLoading(false); }
   }
 
-  async function handleSubmit(questionId) {
-    const selected = selectedOptions[questionId];
-    if (selected === undefined || selected === null) return;
+  async function handleGroupSubmit(group) {
+    const gId = group.groupId;
+    
+    // Validate all selected
+    for(const q of group.questions) {
+      if(selectedOptions[q._id] === undefined) return;
+    }
 
-    setSubmitting((prev) => ({ ...prev, [questionId]: true }));
+    setSubmittingGroup((prev) => ({ ...prev, [gId]: true }));
+    setError("");
     
     try {
-      const res = await submitAnswer({
-        userId: user._id,
-        questionId,
-        selectedOption: selected,
-      });
+      // Submit all concurrently
+      const promises = group.questions.map(q => 
+        submitAnswer({
+          userId: user._id,
+          questionId: q._id,
+          selectedOption: selectedOptions[q._id],
+        })
+      );
       
-      setResults((prev) => ({ ...prev, [questionId]: { ...res, isEvaluated: false } }));
+      const resArray = await Promise.all(promises);
       
-      setStatuses((prev) => ({
-        ...prev,
-        [questionId]: {
+      const newResults = { ...results };
+      const newStatuses = { ...statuses };
+      
+      group.questions.forEach((q, idx) => {
+        newResults[q._id] = { ...resArray[idx], isEvaluated: false };
+        newStatuses[q._id] = {
           answered: true,
           answer: {
-            selectedOption: selected,
+            selectedOption: selectedOptions[q._id],
             isEvaluated: false,
-            submittedAt: res.submittedAt,
+            submittedAt: resArray[idx].submittedAt,
           },
-        },
-      }));
+        };
+      });
+      
+      setResults(newResults);
+      setStatuses(newStatuses);
     } catch (err) {
       setError(err.message);
     } finally {
-      setSubmitting((prev) => ({ ...prev, [questionId]: false }));
+      setSubmittingGroup((prev) => ({ ...prev, [gId]: false }));
     }
   }
 
-  // ─── States ────────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="loading-center">
-        <div className="spinner" />
-        <span>Loading active questions…</span>
-      </div>
-    );
-  }
+  if (loading) return <div className="loading-center"><div className="spinner" /><span>Loading active questions…</span></div>;
 
-  // No questions active right now
   if (!questions || questions.length === 0) {
     return (
       <div className={styles.emptyState}>
         <div className={styles.emptyIcon}>🏏</div>
         <h2 className={styles.emptyTitle}>No Active Matches</h2>
-        <p className={styles.emptyText}>
-          There are currently no active matches available for prediction. Check back soon — the
-          admin will upload them before the matches!
-        </p>
-        <div className={styles.emptyMeta}>
-          Matches only appear during their scheduled start and end times.
-        </div>
+        <p className={styles.emptyText}>There are currently no active matches available for prediction.</p>
+        <div className={styles.emptyMeta}>Matches only appear during their scheduled start and end times.</div>
       </div>
     );
   }
 
+  // 1. Group questions
+  const groupedQuestions = {};
+  questions.forEach(q => {
+    const gId = q.groupId || q._id; // fallback to distinct _id if not grouped
+    if (!groupedQuestions[gId]) {
+      groupedQuestions[gId] = {
+        groupId: gId,
+        matchTitle: q.matchTitle,
+        startTime: q.startTime,
+        endTime: q.endTime,
+        maxPointsTotal: 0,
+        questions: []
+      };
+    }
+    groupedQuestions[gId].questions.push(q);
+    groupedQuestions[gId].maxPointsTotal += q.maxPoints;
+  });
+  const groups = Object.values(groupedQuestions);
+
   return (
     <div className={styles.page}>
-      {error && (
-        <div className="error-box" style={{ marginBottom: "1rem" }}>
-          <span>⚠</span> {error}
-        </div>
-      )}
+      {error && <div className="error-box" style={{ marginBottom: "1rem" }}><span>⚠</span> {error}</div>}
 
-      {questions.map((question) => {
-        const qId = question._id;
-        const status = statuses[qId] || {};
-        const alreadyAnswered = status.answered && !results[qId];
-        const prevAnswer = status.answer;
-        const result = results[qId];
-        const selected = selectedOptions[qId];
-        const isSubmitting = submitting[qId];
+      {groups.map((group) => {
+        const gId = group.groupId;
+        
+        // Group properties
+        const isGroupAnswered = group.questions.some(q => statuses[q._id]?.answered);
+        const isGroupJustSubmitted = group.questions.some(q => results[q._id]);
+        
+        // Top-level display properties based on the first question
+        const firstQid = group.questions[0]._id;
+        const prevAnswer = statuses[firstQid]?.answer || {};
+        const isEvaluated = isGroupAnswered ? prevAnswer.isEvaluated : false;
+
+        let totalGroupPointsEarned = 0;
+        let allCorrect = true;
+        let anyWrong = false;
+
+        if (isEvaluated) {
+          group.questions.forEach(q => {
+            const ans = statuses[q._id]?.answer;
+            if (ans && ans.isCorrect) {
+               totalGroupPointsEarned += q.maxPoints;
+            } else {
+               allCorrect = false;
+               anyWrong = true;
+            }
+          });
+        }
+
+        const isSubmitting = submittingGroup[gId];
+        const hasStarted = startedGroup[gId];
+        const allSelected = group.questions.every(q => selectedOptions[q._id] !== undefined);
 
         return (
-          <div key={qId} style={{ marginBottom: "2rem" }}>
+          <div key={gId} style={{ marginBottom: "2rem" }}>
             {/* Match header */}
             <div className={styles.matchBanner}>
               <div className={styles.matchBadge}>
                 <span>⏳</span>
                 <span>
-                  {new Date(question.startTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(group.startTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                   {" - "}
-                  {new Date(question.endTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(group.endTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                 </span>
               </div>
-              <h1 className={styles.matchTitle}>{question.matchTitle}</h1>
+              <h1 className={styles.matchTitle}>{group.matchTitle}</h1>
               <div className={styles.matchMeta}>
                 <span className="badge badge-gold">
-                  +{question.maxPoints} pts
+                  +{group.maxPointsTotal} pts
                 </span>
               </div>
             </div>
 
-            {/* Already answered state */}
-            {alreadyAnswered && (
+            {/* Already answered state (group level) */}
+            {isGroupAnswered && !isGroupJustSubmitted && (
               <div className={styles.answeredCard}>
                 <div className={styles.answeredHeader}>
                   <span className={styles.answeredIcon}>
-                    {!prevAnswer.isEvaluated ? "⏳" : prevAnswer.isCorrect ? "✅" : "❌"}
+                    {!isEvaluated ? "⏳" : allCorrect ? "✅" : "❌"}
                   </span>
                   <div>
                     <h2 className={styles.answeredTitle}>
-                      {!prevAnswer.isEvaluated
-                        ? "Prediction Locked In!"
-                        : prevAnswer.isCorrect
-                        ? "Correct Prediction!"
-                        : "Wrong Prediction"}
+                      {!isEvaluated
+                        ? "Predictions Locked In!"
+                        : allCorrect
+                        ? "Perfect Predictions!"
+                        : anyWrong && totalGroupPointsEarned > 0 
+                        ? "Partial Correct Predictions"
+                        : "Wrong Predictions"}
                     </h2>
                     <p className={styles.answeredSub}>
-                      {!prevAnswer.isEvaluated
+                      {!isEvaluated
                         ? "Waiting for the match to end for results"
-                        : "You've already answered this question"}
+                        : "You've already answered these questions"}
                     </p>
                   </div>
                 </div>
-                {prevAnswer.isEvaluated && (
+                {isEvaluated && (
                   <div className={styles.resultStats}>
                     <div className={styles.resultStat}>
                       <span className={styles.resultStatValue} style={{ color: "var(--accent-gold)" }}>
-                        +{prevAnswer.pointsAwarded}
+                        +{totalGroupPointsEarned}
                       </span>
                       <span className={styles.resultStatLabel}>Points Earned</span>
                     </div>
@@ -188,29 +219,23 @@ export default function TodayQuiz() {
                       </span>
                       <span className={styles.resultStatLabel}>Submitted At</span>
                     </div>
-                    <div className={styles.resultStat}>
-                      <span className={styles.resultStatValue}>
-                        {prevAnswer.isCorrect ? "✓" : "✗"}
-                      </span>
-                      <span className={styles.resultStatLabel}>Outcome</span>
-                    </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Just submitted result */}
-            {result && (
+            {/* Just submitted result (group level) */}
+            {isGroupJustSubmitted && (
               <div className={`${styles.resultCard} ${styles.resultPending}`}>
                 <div className={styles.resultEmoji}>⏳</div>
-                <h2 className={styles.resultTitle}>Prediction Locked In!</h2>
+                <h2 className={styles.resultTitle}>Predictions Locked In!</h2>
                 <p className={styles.resultAnswer}>
-                  Your choice has been saved. The results will be updated after the match ends.
+                  Your choices have been saved. The results will be updated after the match ends.
                 </p>
                 <div className={styles.resultStats}>
                   <div className={styles.resultStat}>
                     <span className={styles.resultStatValue} style={{ color: "var(--accent-blue)", fontSize: "1.2rem" }}>
-                      {formatTime(result.submittedAt || new Date())}
+                      {formatTime(results[firstQid]?.submittedAt || new Date())}
                     </span>
                     <span className={styles.resultStatLabel}>Submitted At</span>
                   </div>
@@ -218,24 +243,23 @@ export default function TodayQuiz() {
               </div>
             )}
 
-            {/* Question card */}
-            <div className={styles.questionCard} style={{ marginTop: alreadyAnswered || result ? '1rem' : '0' }}>
+            {/* Questions container */}
+            <div className={styles.questionCard} style={{ marginTop: isGroupAnswered || isGroupJustSubmitted ? '1rem' : '0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <p className={styles.questionLabel} style={{ marginBottom: 0 }}>Match Predictions</p>
+                {group.questions.length > 1 && (
+                  <span className="badge badge-primary">{group.questions.length} Questions</span>
+                )}
+              </div>
 
-              <p className={styles.questionLabel}>Match Prediction</p>
-
-              {!status.answered && !result && !started[qId] ? (
+              {!isGroupAnswered && !isGroupJustSubmitted && !hasStarted ? (
                 <div style={{ textAlign: "center", margin: "2rem 0" }}>
                   <button
                     className="btn btn-primary btn-lg"
-                    onClick={() => startPrediction(qId)}
+                    onClick={() => startGroupPrediction(gId)}
                     style={{
-                      width: "100%",
-                      maxWidth: "300px",
-                      margin: "0 auto",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "0.5rem",
+                      width: "100%", maxWidth: "300px", margin: "0 auto",
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
                     }}
                   >
                     <span>▶</span> Play Prediction
@@ -246,71 +270,92 @@ export default function TodayQuiz() {
                 </div>
               ) : (
                 <>
-                  <h2 className={styles.questionText}>{question.question}</h2>
+                  {group.questions.map((q, idx) => {
+                    const qId = q._id;
+                    const status = statuses[qId] || {};
+                    const qAlreadyAnswered = status.answered && !results[qId];
+                    const qPrevAnswer = status.answer;
+                    const result = results[qId];
+                    const selected = selectedOptions[qId];
 
-                  <div className={styles.options}>
-                {question.options.map((opt, i) => {
-                  let optClass = styles.option;
-                  if (alreadyAnswered || result) {
-                    const isEval = alreadyAnswered ? prevAnswer.isEvaluated : false;
-                    const correctIdx = question.correctOption ?? null;
-                    const userIdx = alreadyAnswered ? prevAnswer.selectedOption : selected;
-                    
-                    if (isEval && correctIdx !== null && i === correctIdx)
-                      optClass += ` ${styles.optionCorrect}`;
-                    else if (isEval && i === userIdx && !prevAnswer.isCorrect)
-                      optClass += ` ${styles.optionWrong}`;
-                    else if (i === userIdx)
-                      optClass += ` ${styles.optionSelected}`;
-                    else optClass += ` ${styles.optionDimmed}`;
-                  } else {
-                    if (selected === i) optClass += ` ${styles.optionSelected}`;
-                  }
-                  return (
-                    <button
-                      key={i}
-                      className={optClass}
-                      onClick={() => !alreadyAnswered && !result && setSelectedOptions(p => ({ ...p, [qId]: i }))}
-                      disabled={alreadyAnswered || !!result}
-                    >
-                      <span className={styles.optionLetter}>
-                        {String.fromCharCode(65 + i)}
-                      </span>
-                      <span className={styles.optionText}>{opt}</span>
-                      {alreadyAnswered && prevAnswer.isEvaluated && i === question.correctOption && (
-                        <span className={styles.optionBadge}>✓ Correct</span>
+                    return (
+                      <div key={qId} style={{ 
+                        borderBottom: idx < group.questions.length - 1 ? '1px solid var(--border)' : 'none',
+                        paddingBottom: idx < group.questions.length - 1 ? 24 : 0,
+                        marginBottom: idx < group.questions.length - 1 ? 24 : 0
+                      }}>
+                        <h2 className={styles.questionText} style={{ fontSize: '1.15rem' }}>
+                          <span style={{ color: 'var(--text-muted)', marginRight: 8 }}>{idx + 1}.</span>
+                          {q.question}
+                        </h2>
+
+                        <div className={styles.options}>
+                          {q.options.map((opt, i) => {
+                            let optClass = styles.option;
+                            if (qAlreadyAnswered || result) {
+                              const qIsEval = qAlreadyAnswered ? qPrevAnswer.isEvaluated : false;
+                              const correctIdx = q.correctOption ?? null;
+                              const userIdx = qAlreadyAnswered ? qPrevAnswer.selectedOption : selected;
+                              
+                              if (qIsEval && correctIdx !== null && i === correctIdx)
+                                optClass += ` ${styles.optionCorrect}`;
+                              else if (qIsEval && i === userIdx && !qPrevAnswer.isCorrect)
+                                optClass += ` ${styles.optionWrong}`;
+                              else if (i === userIdx)
+                                optClass += ` ${styles.optionSelected}`;
+                              else optClass += ` ${styles.optionDimmed}`;
+                            } else {
+                              if (selected === i) optClass += ` ${styles.optionSelected}`;
+                            }
+                            return (
+                              <button
+                                key={i}
+                                className={optClass}
+                                onClick={() => !qAlreadyAnswered && !result && setSelectedOptions(p => ({ ...p, [qId]: i }))}
+                                disabled={qAlreadyAnswered || !!result}
+                              >
+                                <span className={styles.optionLetter}>
+                                  {String.fromCharCode(65 + i)}
+                                </span>
+                                <span className={styles.optionText}>{opt}</span>
+                                {qAlreadyAnswered && qPrevAnswer.isEvaluated && i === q.correctOption && (
+                                  <span className={styles.optionBadge}>✓ Correct</span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Group Submit Button */}
+                  {!isGroupAnswered && !isGroupJustSubmitted && (
+                    <div style={{ marginTop: 32, paddingTop: 24, borderTop: '2px dashed var(--border)', textAlign: 'center' }}>
+                      <button
+                        className={`btn btn-primary btn-lg ${styles.submitBtn}`}
+                        onClick={() => handleGroupSubmit(group)}
+                        disabled={!allSelected || isSubmitting}
+                        style={{ width: '100%', maxWidth: 300, margin: '0 auto' }}
+                      >
+                        {isSubmitting ? (
+                          <><span className="spinner" style={{ width: 20, height: 20, borderWidth: 2 }} /> Locking in…</>
+                        ) : (
+                          <><span>🔒</span> Lock In {group.questions.length > 1 ? 'All Answers' : 'Answer'}</>
+                        )}
+                      </button>
+                      
+                      {!allSelected ? (
+                        <p className={styles.submitHint} style={{ color: 'var(--accent-red)' }}>
+                          Please answer all {group.questions.length} questions to lock in.
+                        </p>
+                      ) : (
+                        <p className={styles.submitHint}>
+                          You can only answer once — choose wisely!
+                        </p>
                       )}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {!alreadyAnswered && !result && (
-                <>
-                  <button
-                    className={`btn btn-primary btn-lg ${styles.submitBtn}`}
-                    onClick={() => handleSubmit(qId)}
-                    disabled={selected === undefined || isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <span
-                          className="spinner"
-                          style={{ width: 20, height: 20, borderWidth: 2 }}
-                        />{" "}
-                        Locking in…
-                      </>
-                    ) : (
-                      <>
-                        <span>🔒</span> Lock In Answer
-                      </>
-                    )}
-                  </button>
-                  <p className={styles.submitHint}>
-                    You can only answer once — choose wisely!
-                  </p>
-                </>
-              )}
+                    </div>
+                  )}
                 </>
               )}
             </div>

@@ -17,9 +17,11 @@ async function req(path, options = {}) {
 export const joinUser = (username) =>
   req('/users/join', { method: 'POST', body: { username } });
 
-export const getLeaderboard = (filter = 'overall', date = null) => {
+export const getLeaderboard = (filter = 'overall', date = null, startDate = null, endDate = null) => {
   let url = `/users/leaderboard?filter=${filter}`;
   if (date) url += `&date=${date}`;
+  if (startDate) url += `&startDate=${startDate}`;
+  if (endDate) url += `&endDate=${endDate}`;
   return req(url);
 };
 
@@ -54,6 +56,9 @@ export const adminGetQuestionAnswers = (secret, id) =>
 export const adminCreateQuestion = (secret, body) =>
   req('/admin/questions', { method: 'POST', headers: adminHeaders(secret), body });
 
+export const adminCreateQuestionsBulk = (secret, body) =>
+  req('/admin/questions/bulk', { method: 'POST', headers: adminHeaders(secret), body });
+
 export const adminDeleteQuestion = (secret, id) =>
   req(`/admin/questions/${id}`, { method: 'DELETE', headers: adminHeaders(secret) });
 
@@ -66,9 +71,11 @@ export const adminUpdateQuestion = (secret, id, body) =>
 export const adminGetAnalytics = (secret) =>
   req('/admin/analytics', { headers: adminHeaders(secret) });
 
-export const adminGetLeaderboard = (secret, filter = 'overall', date = null) => {
+export const adminGetLeaderboard = (secret, filter = 'overall', date = null, startDate = null, endDate = null) => {
   let url = `/admin/leaderboard?filter=${filter}`;
   if (date) url += `&date=${date}`;
+  if (startDate) url += `&startDate=${startDate}`;
+  if (endDate) url += `&endDate=${endDate}`;
   return req(url, { headers: adminHeaders(secret) });
 };
 

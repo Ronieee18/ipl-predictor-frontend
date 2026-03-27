@@ -25,18 +25,33 @@ export default function Leaderboard() {
     const ist = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
     return ist.toISOString().slice(0, 10);
   });
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const ist = new Date(d.getTime() + 5.5 * 60 * 60 * 1000);
+    return ist.toISOString().slice(0, 10);
+  });
+  const [endDate, setEndDate] = useState(() => {
+    const now = new Date();
+    const ist = new Date(now.getTime() + 5.5 * 60 * 60 * 1000);
+    return ist.toISOString().slice(0, 10);
+  });
 
   useEffect(() => {
     load();
     const interval = setInterval(load, 30000); // refresh every 30s
     return () => clearInterval(interval);
-  }, [filter, selectedDate]);
+  }, [filter, selectedDate, startDate, endDate]);
 
   async function load() {
     setData([]);
     setLoading(true);
     try {
-      const res = await getLeaderboard(filter, filter === 'daily' ? selectedDate : null);
+      const res = await getLeaderboard(
+        filter, 
+        filter === 'daily' ? selectedDate : null,
+        filter === 'weekly' ? startDate : null,
+        filter === 'weekly' ? endDate : null
+      );
       setData(res);
     } catch (err) {
       setError(err.message);
@@ -107,9 +122,44 @@ export default function Leaderboard() {
                 />
               )}
             </div>
-            <button className={`${styles.filterBtn} ${filter === 'weekly' ? styles.filterBtnActive : ''}`} onClick={() => setFilter('weekly')}>
-              Weekly Fastest
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button className={`${styles.filterBtn} ${filter === 'weekly' ? styles.filterBtnActive : ''}`} onClick={() => setFilter('weekly')}>
+                Weekly Fastest
+              </button>
+              {filter === 'weekly' && (
+                <>
+                  <input 
+                    type="date" 
+                    value={startDate} 
+                    onChange={(e) => setStartDate(e.target.value)}
+                    style={{ 
+                      background: 'var(--bg-mid)', 
+                      color: 'var(--text-main)', 
+                      border: '1px solid var(--border)', 
+                      borderRadius: '8px', 
+                      padding: '4px 8px',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.9rem'
+                    }}
+                  />
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>to</span>
+                  <input 
+                    type="date" 
+                    value={endDate} 
+                    onChange={(e) => setEndDate(e.target.value)}
+                    style={{ 
+                      background: 'var(--bg-mid)', 
+                      color: 'var(--text-main)', 
+                      border: '1px solid var(--border)', 
+                      borderRadius: '8px', 
+                      padding: '4px 8px',
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: '0.9rem'
+                    }}
+                  />
+                </>
+              )}
+            </div>
             <button className={`${styles.filterBtn} ${filter === 'overall' ? styles.filterBtnActive : ''}`} onClick={() => setFilter('overall')}>
               Overall Fastest
             </button>
