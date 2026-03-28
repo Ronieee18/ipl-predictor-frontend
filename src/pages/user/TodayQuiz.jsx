@@ -29,7 +29,7 @@ export default function TodayQuiz() {
 
   useEffect(() => {
     load();
-    const audio = new Audio('/ipl.mp3');
+    const audio = new Audio('/ipl2.mp3');
     audio.play().catch(e => console.log('Audio playback prevented:', e));
   }, []);
 
